@@ -16,13 +16,8 @@
 
 __all__ = ("MQTTClient",)
 
-import asyncio
-import time
-
 import mgw_dc
-import paho.mqtt.client
-
-from paho.mqtt.client import MQTT_ERR_SUCCESS, MQTT_ERR_NO_CONN
+from gmqtt import Client, Message
 
 from .config import conf
 from .logger import get_logger
@@ -32,70 +27,44 @@ logger = get_logger(__name__.split(".", 1)[-1])
 
 class MQTTClient:
     def __init__(self):
-        self.__client = paho.mqtt.client.Client(
+        self.__client = Client(
             client_id=conf.Client.id,
-            clean_session=conf.Client.clean_session
+            clean_session=conf.Client.clean_session,
+            will_message=Message(mgw_dc.dm.gen_last_will_topic(conf.Client.id), "1", qos=2),
+            logger=logger
         )
         self.__client.on_connect = self.__on_connect
         self.__client.on_disconnect = self.__on_disconnect
         self.__client.on_message = self.__on_message
-        self.__client.will_set(topic=mgw_dc.dm.gen_last_will_topic(conf.Client.id), payload="1", qos=2)
-        if conf.Logger.enable_mqtt:
-            self.__client.enable_logger(logger)
         self.connected = self.__client.is_connected
         self.on_connect = None
         self.on_message = None
 
-    def __on_connect(self, client, userdata, flags, rc):
+    def __on_connect(self, client, flags, rc, properties):
         if rc == 0:
             logger.info("connected to '{}'".format(conf.MsgBroker.host))
             self.__client.subscribe(mgw_dc.dm.gen_refresh_topic(), 1)
             self.on_connect()
         else:
-            logger.error("could not connect to '{}' - {}".format(conf.MsgBroker.host, paho.mqtt.client.connack_string(rc)))
+            logger.error("could not connect to '{}'".format(conf.MsgBroker.host))
 
-    def __on_disconnect(self, client, userdata, rc):
-        if rc == 0:
+    def __on_disconnect(self, packet, exc=None):
+        if exc == 0:
             logger.info("disconnected from '{}'".format(conf.MsgBroker.host))
         else:
             logger.warning("disconnected from '{}' unexpectedly".format(conf.MsgBroker.host))
 
-    def __on_message(self, client, userdata, message: paho.mqtt.client.MQTTMessage):
-        self.on_message(message.topic, message.payload)
+    def __on_message(self, client, topic, payload, qos, properties):
+        self.on_message(topic, payload)
 
-    async def loop(self):
-        while True:
-            if not self.__client.is_connected():
-                code = MQTT_ERR_NO_CONN
-                while code != MQTT_ERR_SUCCESS:
-                    try:
-                        code = self.__client.connect(conf.MsgBroker.host, conf.MsgBroker.port, keepalive=conf.Client.keep_alive)
-                    except Exception as ex:
-                        logger.error(
-                            "could not connect to '{}' on '{}' - {}".format(conf.MsgBroker.host, conf.MsgBroker.port, str(ex))
-                        )
-                        time.sleep(5)
-                self.__client.loop_start()
-            self.__client.loop()
-            await asyncio.sleep(0.001)   
+    async def connect(self):
+        await self.__client.connect(host=conf.MsgBroker.host, port=conf.MsgBroker.port, keepalive=conf.Client.keep_alive) 
 
     def subscribe(self, topic: str, qos: int) -> None:
-        res = self.__client.subscribe(topic=topic, qos=qos)
-        if res[0] is paho.mqtt.client.MQTT_ERR_SUCCESS:
-            logger.debug("subscribed to '{}'".format(topic))
-        else:
-            raise RuntimeError(paho.mqtt.client.error_string(res[0]).replace(".", "").lower())
+        self.__client.subscribe(subscription_or_topic=topic, qos=qos)
 
     def unsubscribe(self, topic: str) -> None:
-        res = self.__client.unsubscribe(topic=topic)
-        if res[0] is paho.mqtt.client.MQTT_ERR_SUCCESS:
-            logger.debug("unsubscribed from '{}'".format(topic))
-        else:
-            raise RuntimeError(paho.mqtt.client.error_string(res[0]).replace(".", "").lower())
+        self.__client.unsubscribe(topic=topic)
 
     def publish(self, topic: str, payload: str, qos: int) -> None:
-        msg_info = self.__client.publish(topic=topic, payload=payload, qos=qos, retain=False)
-        if msg_info.rc == paho.mqtt.client.MQTT_ERR_SUCCESS:
-            logger.debug("published '{}' - (q{}, m{})".format(payload, qos, msg_info.mid))
-        else:
-            raise RuntimeError(paho.mqtt.client.error_string(msg_info.rc).replace(".", "").lower())
+        self.__client.publish(message_or_topic=topic, payload=payload, qos=qos, retain=False)

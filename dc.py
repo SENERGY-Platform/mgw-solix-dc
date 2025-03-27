@@ -45,7 +45,7 @@ async def main():
             tg.create_task(discovery.discovery_loop())
             tg.create_task(router.run_tasks())
             tg.create_task(events.run())
-            tg.create_task(mqtt_client.loop())
+            tg.create_task(mqtt_client.connect())
 
     
 

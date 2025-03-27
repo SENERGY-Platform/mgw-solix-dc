@@ -29,7 +29,6 @@ class Conf:
     @simple_env_var.section
     class Logger:
         level = "info"
-        enable_mqtt = False
 
     @simple_env_var.section
     class Client:

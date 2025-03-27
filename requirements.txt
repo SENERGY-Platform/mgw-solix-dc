@@ -4,5 +4,5 @@ git+https://github.com/SENERGY-Platform/mgw-dc-lib.git@0.3.2
 aiohttp==3.11.14
 aiofiles==24.1.0 
 cryptography==44.0.2 
-paho-mqtt>=1.4.0,<1.6
+gmqtt==0.7.0 
 pycryptodome<4.0.0
