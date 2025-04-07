@@ -37,6 +37,7 @@ class Events():
         while True:
             await self._anker_solix_api.update_device_energy()
             await self._anker_solix_api.update_site_details()
+            await self._anker_solix_api.update_device_details()
             for device in self.device_manager.get_devices().values():
                 self.router.route(mgw_dc.com.gen_command_topic(device.id, conf.Senergy.service_status), "", True)
             await asyncio.sleep(conf.Senergy.events_status_seconds)
