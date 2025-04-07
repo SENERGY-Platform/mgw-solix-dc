@@ -35,7 +35,7 @@ class Events():
 
     async def queue_status(self):
         while True:
-            await self._anker_solix_api.myapi.update_sites()
+            await self._anker_solix_api.update_sites()
             await self._anker_solix_api.update_site_details()
             await self._anker_solix_api.update_device_details()
             await self._anker_solix_api.update_device_energy()
