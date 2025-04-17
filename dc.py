@@ -15,6 +15,7 @@
 """
 import asyncio
 import signal
+from time import sleep
 
 from aiohttp import ClientSession
 from api import api
@@ -29,11 +30,17 @@ logger = get_logger(__name__.split(".", 1)[-1])
 
 async def main():
     async with ClientSession() as websession:
+        anker_solix_api = None
+        while anker_solix_api is None:
+            try:
+                anker_solix_api = api.AnkerSolixApi(
+                    conf.Solix.username,  conf.Solix.password,  conf.Solix.country, websession, logger
+                )
+            except Exception as e:
+                logger.error(f"Could not initialize Solix API: {e}")
+                sleep(60)
         mqtt_client = MQTTClient()
         device_manager = DeviceManager(mqtt_client=mqtt_client)
-        anker_solix_api = api.AnkerSolixApi(
-            conf.Solix.username,  conf.Solix.password,  conf.Solix.country, websession, logger
-        )
         discovery = Discovery(device_manager=device_manager, anker_solix_api=anker_solix_api)
         command = Command(mqtt_client=mqtt_client, device_manager=device_manager, anker_solix_api=anker_solix_api)
         router = Router(refresh_callback=device_manager.publish_devices, command_callback=command.execute_command)

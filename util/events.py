@@ -35,12 +35,15 @@ class Events():
 
     async def queue_status(self):
         while True:
-            await self._anker_solix_api.update_sites()
-            await self._anker_solix_api.update_site_details()
-            await self._anker_solix_api.update_device_details()
-            await self._anker_solix_api.update_device_energy()
-            for device in self.device_manager.get_devices().values():
-                self.router.route(mgw_dc.com.gen_command_topic(device.id, conf.Senergy.service_status), "", True)
+            try:
+                await self._anker_solix_api.update_sites()
+                await self._anker_solix_api.update_site_details()
+                await self._anker_solix_api.update_device_details()
+                await self._anker_solix_api.update_device_energy()
+                for device in self.device_manager.get_devices().values():
+                    self.router.route(mgw_dc.com.gen_command_topic(device.id, conf.Senergy.service_status), "", True)
+            except Exception as e:
+                logger.error(f"Could not update device status: {e}")
             await asyncio.sleep(conf.Senergy.events_status_seconds)
 
     async def run(self) -> None:
