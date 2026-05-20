@@ -18,14 +18,48 @@ import typing
 
 import mgw_dc.dm
 
+from api.mqtt_device import SolixMqttDevice
+from util import get_logger
+
 __all__ = ("DCDevice",)
+
+logger = get_logger(__name__.split(".", 1)[-1])
 
 
 class DCDevice(mgw_dc.dm.Device):
-    def __init__(self, id: str, name: str, type: str, device: dict, state: typing.Optional[str] = None,
+    def __init__(self, id: str, name: str, type: str, device: SolixMqttDevice, state: typing.Optional[str] = None,
                  attributes=None):
         super().__init__(id, name, type, state, attributes)
         self._device = device
+        self._periodic_trigger_task: typing.Optional[typing.Any] = None
 
-    def get(self) -> dict:
+    def get(self) -> SolixMqttDevice:
         return self._device
+
+    def start_periodic_trigger(self):
+        interval: int = 600
+        import asyncio
+        if self._periodic_trigger_task is not None and not self._periodic_trigger_task.done():
+            return
+
+        async def periodic():
+            try:
+                while True:
+                    try:
+                        logger.debug(f"Triggering realtime update for device {self._device.sn}")
+                        await self._device.realtime_trigger(timeout=interval)
+                    except Exception as ex:
+                        logger.error(
+                            f"Error occurred while triggering realtime update for device {self._device.device_sn}: {ex}")
+                    await asyncio.sleep(interval)
+            except asyncio.CancelledError:
+                logger.info(
+                    f"Periodic trigger cancelled for device {self._device.device_sn}")
+                return
+
+        self._periodic_trigger_task = asyncio.create_task(periodic())
+
+    def stop_periodic_trigger(self):
+        if self._periodic_trigger_task is not None and not self._periodic_trigger_task.done():
+            self._periodic_trigger_task.cancel()
+        self._periodic_trigger_task = None

@@ -18,7 +18,8 @@ import typing
 
 import mgw_dc
 
-from solix.services.status import handle_status
+from solix.services.raw_command import handle_raw_command
+from solix.services.raw_event import handle_raw_event
 from util import conf, get_logger, MQTTClient
 from util.device_manager import DeviceManager
 from api import api
@@ -27,9 +28,7 @@ logger = get_logger(__name__.split(".", 1)[-1])
 
 __all__ = ("Command",)
 
-command_handlers = {
-    conf.Senergy.service_status: handle_status,
-}
+command_handlers = {}
 
 
 class Command:
@@ -47,15 +46,19 @@ class Command:
                 payload = {}
             else:
                 payload = json.loads(payload["data"])
-        else:
+        elif payload is None:
             payload = {}
-        if service not in command_handlers:
-            logger.error("Unimplemented service " + service)
-            return
         if device_id not in self.device_manager.get_devices():
-            logger.error("Unimplemented service " + service)
+            logger.error("Undiscovered device " + device_id)
         try:
-            result = await command_handlers[service](self.device_manager.get_devices()[device_id], anker_solix_api=self._anker_solix_api, payload=payload)
+            if service in command_handlers:
+                handler = command_handlers[service]
+            else:
+                if is_event:
+                    handler = handle_raw_event
+                else:
+                    handler = handle_raw_command
+            result = await handler(self.device_manager.get_devices()[device_id], anker_solix_api=self._anker_solix_api, payload=payload, service=service)
         except Exception as ex:
             logger.error("Command failed: {}".format(ex))
             return

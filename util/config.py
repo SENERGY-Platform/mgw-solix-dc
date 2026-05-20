@@ -43,8 +43,7 @@ class Conf:
 
     @simple_env_var.section
     class Senergy:
-        dt_solarbank = "urn:infai:ses:device-type:85d88662-340d-4f18-a3a2-9d62d6fd62b5"
-        dt_plug = "urn:infai:ses:device-type:7527dff5-59bf-43a0-9423-bc07b7d2c135"
+        dt_A17C1 = "urn:infai:ses:device-type:50d13003-3e44-4e32-92c4-925291842f3d"
         service_status = "status"
         events_status_seconds = 30
         

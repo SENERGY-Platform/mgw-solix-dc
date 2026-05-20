@@ -25,7 +25,6 @@ from .mqtt import *
 from .router import *
 from .device import *
 from .device_manager import *
-from .events import *
 
 from mgw_dc.dm import Device
 
@@ -36,7 +35,6 @@ __all__ = (
     router.__all__,
     device.__all__,
     device_manager.__all__,
-    events.__all__
 )
 
 

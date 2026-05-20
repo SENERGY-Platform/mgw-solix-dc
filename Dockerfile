@@ -1,4 +1,4 @@
-FROM python:3-slim
+FROM python:3.14-slim
 
 LABEL org.opencontainers.image.source=https://github.com/SENERGY-Platform/mgw-solix-dc
 

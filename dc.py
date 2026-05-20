@@ -21,7 +21,7 @@ from aiohttp import ClientSession
 from api import api
 
 from solix import Discovery, Command
-from util import init_logger, conf, MQTTClient, handle_sigterm, Router, DeviceManager, Events
+from util import init_logger, conf, MQTTClient, handle_sigterm, Router, DeviceManager
 from util.logger import get_logger
 
 
@@ -41,25 +41,26 @@ async def main():
                 sleep(60)
         mqtt_client = MQTTClient()
         device_manager = DeviceManager(mqtt_client=mqtt_client)
-        discovery = Discovery(device_manager=device_manager, anker_solix_api=anker_solix_api)
-        command = Command(mqtt_client=mqtt_client, device_manager=device_manager, anker_solix_api=anker_solix_api)
-        router = Router(refresh_callback=device_manager.publish_devices, command_callback=command.execute_command)
+
+        command = Command(mqtt_client=mqtt_client,
+                          device_manager=device_manager, anker_solix_api=anker_solix_api)
+        router = Router(refresh_callback=device_manager.publish_devices,
+                        command_callback=command.execute_command)
+        discovery = Discovery(device_manager=device_manager,
+                              anker_solix_api=anker_solix_api,
+                              command=command,
+                              router=router)
         mqtt_client.on_connect = device_manager.publish_devices
         mqtt_client.on_message = router.route
-        events = Events(router=router, device_manager=device_manager, anker_solix_api=anker_solix_api)
-        
+
         async with asyncio.TaskGroup() as tg:
             tg.create_task(discovery.discovery_loop())
             tg.create_task(router.run_tasks())
-            tg.create_task(events.run())
             tg.create_task(mqtt_client.connect())
 
-    
 
 if __name__ == '__main__':
     signal.signal(signal.SIGTERM, handle_sigterm)
     signal.signal(signal.SIGINT, handle_sigterm)
     init_logger(conf.Logger.level)
     asyncio.run(main(), debug=False)
-    
-

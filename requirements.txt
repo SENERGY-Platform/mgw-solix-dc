@@ -1,8 +1,10 @@
-git+https://github.com/thomluther/anker-solix-api.git@v2.5.5
+git+https://github.com/thomluther/anker-solix-api.git@v3.6.3
 git+https://github.com/SENERGY-Platform/simple-env-var-manager.git@1.0.2
 git+https://github.com/SENERGY-Platform/mgw-dc-lib.git@0.3.2
-aiohttp==3.11.14
-aiofiles==24.1.0 
-cryptography==44.0.2 
+aiohttp>=3.11.14
+aiofiles>=25.1.0 
+cryptography>=3.4.8
 gmqtt==0.7.0 
 pycryptodome<4.0.0
+paho-mqtt>=2.1.0
+python-dotenv>=1.2.1
