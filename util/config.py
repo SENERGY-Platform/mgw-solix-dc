@@ -44,8 +44,7 @@ class Conf:
     @simple_env_var.section
     class Senergy:
         dt_A17C1 = "urn:infai:ses:device-type:50d13003-3e44-4e32-92c4-925291842f3d"
-        service_status = "status"
-        events_status_seconds = 30
+        dt_A17X8 = "urn:infai:ses:device-type:75b63906-dab5-494c-8ad1-712ae9f66068"
         
     @simple_env_var.section
     class Solix:

@@ -33,7 +33,7 @@ logger = get_logger(__name__.split(".", 1)[-1])
 
 device_types = {
     'A17C1': conf.Senergy.dt_A17C1,
-    # TODO add missing device types
+    'A17X8': conf.Senergy.dt_A17X8,
 }
 
 
@@ -98,10 +98,8 @@ class Discovery():
                     {"key": "solix/generation", "value": f"{dev['generation']}"})
             if 'tag' in dev:
                 attributes.append({"key": "solix/tag", "value": dev['tag']})
-            dc_device = DCDevice(id=id, name=dev['alias'], type=dt, state=device_state.online,
+            devices[id] = DCDevice(id=id, name=dev['alias'], type=dt, state=device_state.online,
                                  device=mqttdevice, attributes=attributes)
-            dc_device.start_periodic_trigger()
-            devices[id] = dc_device
 
         logger.info("Discovered " + str(len(devices)) + " devices")
         return devices
@@ -120,6 +118,7 @@ class Discovery():
                 stored_devices, devices)
             if new_devices:
                 for device_id in new_devices:
+                    devices[device_id].start_periodic_trigger()
                     self._device_manager.handle_new_device(devices[device_id])
             if missing_devices:
                 for device_id in missing_devices:
