@@ -99,7 +99,7 @@ class Discovery():
             if 'tag' in dev:
                 attributes.append({"key": "solix/tag", "value": dev['tag']})
             devices[id] = DCDevice(id=id, name=dev['alias'], type=dt, state=device_state.online,
-                                 device=mqttdevice, attributes=attributes)
+                                 mqttdevice=mqttdevice, solixdevice=dev, attributes=attributes)
 
         logger.info("Discovered " + str(len(devices)) + " devices")
         return devices

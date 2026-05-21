@@ -20,6 +20,7 @@ import mgw_dc
 
 from solix.services.raw_command import handle_raw_command
 from solix.services.raw_event import handle_raw_event
+from solix.services.sb2_home_load import handle_sb2_home_load
 from util import conf, get_logger, MQTTClient
 from util.device_manager import DeviceManager
 from api import api
@@ -28,7 +29,9 @@ logger = get_logger(__name__.split(".", 1)[-1])
 
 __all__ = ("Command",)
 
-command_handlers = {}
+command_handlers = {
+    "sb2_home_load": handle_sb2_home_load,
+}
 
 
 class Command:

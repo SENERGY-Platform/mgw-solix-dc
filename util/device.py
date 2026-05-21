@@ -27,14 +27,18 @@ logger = get_logger(__name__.split(".", 1)[-1])
 
 
 class DCDevice(mgw_dc.dm.Device):
-    def __init__(self, id: str, name: str, type: str, device: SolixMqttDevice, state: typing.Optional[str] = None,
+    def __init__(self, id: str, name: str, type: str, mqttdevice: SolixMqttDevice, solixdevice: dict, state: typing.Optional[str] = None,
                  attributes=None):
         super().__init__(id, name, type, state, attributes)
-        self._device = device
+        self._mqttdevice = mqttdevice
+        self._solixdevice = solixdevice
         self._periodic_trigger_task: typing.Optional[typing.Any] = None
 
-    def get(self) -> SolixMqttDevice:
-        return self._device
+    def get_mqtt_device(self) -> SolixMqttDevice:
+        return self._mqttdevice
+    
+    def get_solix_device(self) -> dict:
+        return self._solixdevice
 
     def start_periodic_trigger(self):
         interval: int = 600
@@ -46,15 +50,15 @@ class DCDevice(mgw_dc.dm.Device):
             try:
                 while True:
                     try:
-                        logger.debug(f"Triggering realtime update for device {self._device.sn}")
-                        await self._device.realtime_trigger(timeout=interval)
+                        logger.debug(f"Triggering realtime update for device {self._mqttdevice.sn}")
+                        await self._mqttdevice.realtime_trigger(timeout=interval)
                     except Exception as ex:
                         logger.error(
-                            f"Error occurred while triggering realtime update for device {self._device.device_sn}: {ex}")
+                            f"Error occurred while triggering realtime update for device {self._mqttdevice.device_sn}: {ex}")
                     await asyncio.sleep(interval)
             except asyncio.CancelledError:
                 logger.info(
-                    f"Periodic trigger cancelled for device {self._device.device_sn}")
+                    f"Periodic trigger cancelled for device {self._mqttdevice.device_sn}")
                 return
 
         self._periodic_trigger_task = asyncio.create_task(periodic())
