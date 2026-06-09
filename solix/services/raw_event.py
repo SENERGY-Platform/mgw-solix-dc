@@ -20,6 +20,6 @@ from util import Device
 from api import api
 
 
-async def handle_raw_event(device: Device, anker_solix_api: api.AnkerSolixApi, payload: typing.Dict, service: str, *args, **kwargs) -> typing.Dict:
-    return payload
+async def handle_raw_event(device: Device, anker_solix_api: api.AnkerSolixApi, payload: typing.Dict, service: str, *args, **kwargs) -> typing.Union[typing.Dict, typing.Optional[str]]:
+    return payload, None
     

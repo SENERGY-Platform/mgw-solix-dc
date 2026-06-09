@@ -16,12 +16,11 @@
 import typing
 
 
+from util import Device
 from api import api
 
-from util import DCDevice
 
-
-async def handle_raw_command(device: DCDevice, _: api.AnkerSolixApi, payload: typing.Dict,   service: str, *args, **kwargs) -> typing.Union[typing.Dict, typing.Optional[str]]:
-    mdev = device.get_mqtt_device()
-    result = await mdev.run_command(cmd=service, parm_map=payload)
-    return result, None
+async def handle_param_info(device: Device, anker_solix_api: api.AnkerSolixApi, payload: typing.Dict, service: str, *args, **kwargs) -> typing.Union[typing.Dict, typing.Optional[str]]:
+    if 'expansion_packs' in payload:
+        return payload, 'expansion_packs'
+    return payload, None

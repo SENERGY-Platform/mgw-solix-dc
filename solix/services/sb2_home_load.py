@@ -21,7 +21,7 @@ from api import api
 from util import DCDevice
 
 
-async def handle_sb2_home_load(device: DCDevice, anker_solix_api: api.AnkerSolixApi, payload: typing.Dict, service: str, *args, **kwargs) -> typing.Dict:
+async def handle_sb2_home_load(device: DCDevice, anker_solix_api: api.AnkerSolixApi, payload: typing.Dict, service: str, *args, **kwargs) -> typing.Union[typing.Dict, typing.Optional[str]]:
     dev = device.get_solix_device()
     result = await anker_solix_api.set_sb2_home_load(dev['site_id'], dev['device_sn'], **payload)
-    return result
+    return result, None

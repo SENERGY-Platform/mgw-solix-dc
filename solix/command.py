@@ -21,6 +21,7 @@ import mgw_dc
 from solix.services.raw_command import handle_raw_command
 from solix.services.raw_event import handle_raw_event
 from solix.services.sb2_home_load import handle_sb2_home_load
+from solix.services.param_info import handle_param_info
 from util import conf, get_logger, MQTTClient
 from util.device_manager import DeviceManager
 from api import api
@@ -31,6 +32,7 @@ __all__ = ("Command",)
 
 command_handlers = {
     "sb2_home_load": handle_sb2_home_load,
+    "param_info": handle_param_info,
 }
 
 
@@ -61,7 +63,9 @@ class Command:
                     handler = handle_raw_event
                 else:
                     handler = handle_raw_command
-            result = await handler(self.device_manager.get_devices()[device_id], anker_solix_api=self._anker_solix_api, payload=payload, service=service)
+            result, rewritten_service = await handler(self.device_manager.get_devices()[device_id], anker_solix_api=self._anker_solix_api, payload=payload, service=service)
+            if rewritten_service is not None:
+                service = rewritten_service
         except Exception as ex:
             logger.error("Command failed: {}".format(ex))
             return
